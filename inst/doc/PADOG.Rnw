@@ -209,7 +209,7 @@ return(res[res$ID %in% targetGeneSets,])
 
 #run the analysis on all 24 datasets and compare the new method "myRand" with 
 #PADOG and GSA (if installed) (chosen as reference since is listed first in the existingMethods)
-#if the package multicore is installed datasets are analyzed in parallel.
+#if the package parallel is installed datasets are analyzed in parallel.
 #out=compPADOG(datasets=NULL,existingMethods=c("GSA","PADOG"),
  #mymethods=list(myRand=randomF),
  #gslist="KEGG.db",Nmin=3,NI=1000,plots=TRUE,verbose=FALSE)

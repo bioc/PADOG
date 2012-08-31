@@ -1,6 +1,6 @@
 
 
-compPADOG=function(datasets=NULL,existingMethods=c("GSA","PADOG"),mymethods=NULL,gs.names=NULL,gslist="KEGG.db",organism="hsa",Nmin=3,NI=1000,use.multicore=TRUE,plots=FALSE,verbose=FALSE){
+compPADOG=function(datasets=NULL,existingMethods=c("GSA","PADOG"),mymethods=NULL,gs.names=NULL,gslist="KEGG.db",organism="hsa",Nmin=3,NI=1000,use.parallel=TRUE,plots=FALSE,verbose=FALSE){
 
 if(is.null(datasets)){
 files=data(package="KEGGdzPathwaysGEO")$results[,"Item"]
@@ -151,7 +151,7 @@ if(!is.null(gs.names)){stopifnot(length(gslist)==length(gs.names))}
 
 reslist=list()
 for(i in 1:length(GSmethods)){
-if(require(multicore)&use.multicore){
+if(require(parallel)&use.parallel){
 reslist[[names(GSmethods)[i]]]<- mclapply(files,GSmethods[[i]],mygslist=gslist,minsize=Nmin)
 }else{
  reslist[[names(GSmethods)[i]]]<- lapply(files,GSmethods[[i]],mygslist=gslist,minsize=Nmin)
