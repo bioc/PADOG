@@ -27,7 +27,7 @@ fit2 <- eBayes(fit2)
 aT1<-topTable(fit2,coef=1, number=dim(esetm)[1])
 }
 #annotate ids to ENTREZID
-aT1$ID=rownames(fit2) 
+aT1$ID=rownames(aT1) 
 require(annotation,character.only=TRUE)
 anpack=paste(unlist(strsplit(annotation,split=".db")),"ENTREZID",sep="")
 aT1<-aT1[aT1$ID%in%keys(get(anpack)),]

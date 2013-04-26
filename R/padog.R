@@ -81,11 +81,16 @@ if(!is.null(annotation)){
 #get rid of duplicates in the esetm by choosing the probe(set) with lowest p-value; get ENTREZIDs for probes
 aT1=filteranot(esetm,group,paired,block,annotation)
 #drop genes not in any geneset
-aT1<-aT1[aT1$ENTREZID%in%allGallP,]
 #drop from esetm all duplicate genes and genes not in the genesets
 esetm=esetm[rownames(esetm)%in%aT1$ID,]
 rownames(esetm)<-aT1$ENTREZID[match(rownames(esetm),aT1$ID)]
 }
+restg=setdiff(rownames(esetm),names(gf))
+appendd=rep(1,length(restg))
+names(appendd)<-restg
+gf=c(gf,appendd)
+
+
 
  stopifnot(all(!duplicated(rownames(esetm))))
  stopifnot(sum(rownames(esetm)%in%allGallP)>10)
@@ -141,6 +146,7 @@ fit2 <- contrasts.fit(fit, cont.matrix)
 fit2 <- eBayes(fit2)
 aT1<-topTable(fit2,coef=1, number=dim(esetm)[1])
 }
+aT1$ID=rownames(aT1)
 
 de=abs(aT1$t)
 names(de)<-aT1$ID

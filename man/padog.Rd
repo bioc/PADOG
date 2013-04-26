@@ -92,3 +92,4 @@ myr[1:20,]
 
 \keyword{nonparametric}% at least one, from doc/KEYWORDS
 \keyword{methods}% __ONLY ONE__ keyword per line
+
