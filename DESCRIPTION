@@ -1,12 +1,12 @@
 Package: PADOG
-Version: 1.9.0
-Date: 2012-09-10
+Version: 1.9.1
+Date: 2015-03-20
 Title: Pathway Analysis with Down-weighting of Overlapping Genes
         (PADOG)
-Author: Adi Laurentiu Tarca <atarca@med.wayne.edu>
-Depends: R (>= 2.14.0), KEGGdzPathwaysGEO, graphics, limma,
-        AnnotationDbi, Biobase, methods, nlme, GSA,KEGG.db
-Suggests: parallel
+Author: Adi Laurentiu Tarca <atarca@med.wayne.edu>; Zhonghui Xu <zhonghui.xu@gmail.com> 
+Depends: R (>= 3.0.0), KEGGdzPathwaysGEO,
+    methods
+Suggests: doParallel, parallel
 Maintainer: Adi Laurentiu Tarca <atarca@med.wayne.edu>
 Description: This package implements a general purpose gene set
         analysis method called PADOG that downplays the importance of
@@ -17,7 +17,15 @@ Description: This package implements a general purpose gene set
 License: GPL (>= 2)
 URL:
 Collate: padog.R compPADOG.R filteranot.R
-Imports: graphics, limma, hgu133plus2.db, hgu133a.db, KEGG.db,
-        AnnotationDbi, Biobase, methods, nlme
+Imports: limma,
+    AnnotationDbi,
+    Biobase,
+    GSA,
+    foreach,
+    doRNG,
+    hgu133plus2.db,
+    hgu133a.db,
+    KEGG.db,
+    nlme
 LazyLoad: yes
 biocViews: Microarray, OneChannel, TwoChannel

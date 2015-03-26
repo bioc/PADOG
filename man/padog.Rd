@@ -6,7 +6,9 @@ This is a general purpose gene set analysis method that downplays the importance
 The package provides also a benchmark for gene set analysis in terms of sensitivity and ranking using 24 public datasets.
 }
 \usage{
-padog(esetm=NULL,group=NULL,paired=FALSE,block=NULL,gslist="KEGG.db",organism="hsa",annotation=NULL,gs.names=NULL,NI=1000,plots=FALSE,targetgs=NULL,Nmin=3,verbose=TRUE)
+padog(esetm=NULL,group=NULL,paired=FALSE,block=NULL,gslist="KEGG.db",organism="hsa",
+      annotation=NULL,gs.names=NULL,NI=1000,plots=FALSE,targetgs=NULL,Nmin=3,
+      verbose=TRUE,parallel=FALSE,dseed=NULL,ncr=NULL)
 }
 \arguments{
   \item{esetm}{A matrix containing log transfomed and normalized gene expression data. Rows correspond to genes and columns to samples.
@@ -29,6 +31,10 @@ padog(esetm=NULL,group=NULL,paired=FALSE,block=NULL,gslist="KEGG.db",organism="h
   \item{targetgs}{The identifier of a traget gene set for which the scores will be highlighted in the plots produced if \code{plots=TRUE}  }
   \item{Nmin}{The minimum size of gene sets to be included in the analysis.}
   \item{verbose}{If set to TRUE, displays the number of iterations elapsed is displayed.}
+  \item{parallel}{If set to TRUE, the \code{NI} iterations will be executed in parallel if multiple CPU cores are available and foreach and doRNG packages are installed.}
+  \item{dseed}{Optional initial seed for random number generator (integer).}
+  \item{ncr}{The number of CPU cores used when \code{parallel} set to TRUE. Default is to use all CPU cores detected.}
+
 }
 
 \details{
@@ -81,11 +87,31 @@ organism="hsa",
 verbose=TRUE,
 Nmin=3,
 NI=25,
-plots=FALSE)
+plots=FALSE,
+dseed=1)
+
+
+myr2=padog(
+esetm=dat.m,
+group=ano$Group,
+paired=design=="Paired",
+block=ano$Block,
+targetgs=targetGeneSets,
+annotation=annotation,
+gslist="KEGG.db",
+organism="hsa",
+verbose=TRUE,
+Nmin=3,
+NI=25,
+plots=FALSE,
+dseed=1,
+paral=TRUE,
+ncr=2)
 
 
 myr[1:20,]
 
+all.equal(myr, myr2)
 
 
 }

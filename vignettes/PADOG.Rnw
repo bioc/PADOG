@@ -6,6 +6,7 @@
 
 %\usepackage{amsmath,epsfig,psfig,fullpage} 
 \usepackage{amsmath,epsfig,fullpage} 
+\usepackage{tabularx}
 %\usepackage{graphicx,pstricks}
 %\usepackage{ifpdf}
 \usepackage[authoryear,round]{natbib}
@@ -31,7 +32,7 @@ $^3$Center for Molecular Medicine and Genetics, Wayne State University \\
 
 \section{Overview}
 
-This package implements the \emph{\textbf{P}athway \textbf{A}nalysis with \textbf{D}own-weighting of \textbf{O}verlapping \textbf{G}enes} (\textbf{PADOG})
+This package implements the \emph{\textbf{P}athway \textbf{A}nalysis with \textbf{D}own-weighting of \textbf{O}verlapping \textbf{G}enes} (\textbf{PAD\-OG})
  algorithm described in \cite{TarcaPADOG:2012}. The method can be applied to analyze any type of gene sets yet in here
  it is illustarted using KEGG pathways.
 The method computes a gene set score as the mean of absolute values of weighted moderated gene
@@ -59,36 +60,43 @@ The RMA preprocessed data using the {\tt affy} package is the entry point for th
 function:
  
 <<eval=TRUE, echo=TRUE,fig=TRUE,label=fig1>>=
-library(KEGGdzPathwaysGEO)
 library(PADOG)
-set.seed(1)
-set="GSE9348"
-data(list=set,package="KEGGdzPathwaysGEO")
-x=get(set)
-#Extract from the dataset the required info
-exp=experimentData(x);
-dataset= exp@name
-dat.m=exprs(x)
-ano=pData(x)
-design= notes(exp)$design
-annotation= paste(x@annotation,".db",sep="")
-targetGeneSets= notes(exp)$targetGeneSets
-
+set = "GSE9348"
+data(list = set, package = "KEGGdzPathwaysGEO")
+#write a function to extract required info into a list
+getdataaslist = function(x) {
+    x = get(x)
+    exp = experimentData(x)
+    dataset = exp@name
+    disease = notes(exp)$disease
+    dat.m = exprs(x)
+    ano = pData(x)
+    design = notes(exp)$design
+    annotation = paste(x@annotation, ".db", sep = "")
+    targetGeneSets = notes(exp)$targetGeneSets
+    list = list(dataset, disease, dat.m, ano, design, annotation, targetGeneSets)
+    names(list) = c("dataset", "disease", "dat.m", "ano", "design", "annotation", 
+        "targetGeneSets")
+    return(list)
+}
+dlist = getdataaslist(set)
 #run padog function on KEGG pathways
-#use NI=1000 for accurate results
-myr=padog(
-esetm=dat.m,
-group=ano$Group,
-paired=design=="Paired",
-block=ano$Block,
-targetgs=targetGeneSets,
-annotation=annotation,
-gslist="KEGG.db",
-organism="hsa",
-verbose=FALSE,
-Nmin=3,
-NI=50,
-plots=TRUE)
+#use NI=1000 for accurate results and run in parallel to speed up (see below)
+myr = padog(
+    esetm = dlist$dat.m,
+    group = dlist$ano$Group,
+    paired = dlist$design == "Paired",
+    block = dlist$ano$Block,
+    targetgs = dlist$targetGeneSets,
+    annotation = dlist$annotation,
+    gslist = "KEGG.db",
+    organism = "hsa",
+    verbose = FALSE,
+    Nmin = 3,
+    NI = 50,
+    plots = TRUE,
+    dseed = 1
+)
 
 myr[1:15,-c(4,5)]
 @
@@ -109,17 +117,42 @@ is shown with a red bullet throughout all 4 panels, and a red horizontal line ma
 with the true class labels ($ite=0$, x-axis). The box plots of scores obtained with the true class labels 
 are also highlighted in blue. With PADOG, after the second standardization, the target pathway scores 
 obtained from permutations are less frequently above the red line ($0/20$) (more extreme) than for ABSmT 
- ($5/20$). Over 1,000 iterations, $p_{PADOG}$ was estimated to be 0.013 while $p_{ABSmT}$ worse, i.e. 0.135.
+ ($5/20$). Over 1,000 iterations, $p_{PADOG}$ was estimated to be 0.018 while $p_{ABSmT}$ worse, i.e. 0.138.\\
 
+To run PADOG in parallel, you need to have package {\tt doParallel} installed, and set {\tt parallel = TRUE} in the
+call to {\tt padog}:
+<<eval=TRUE, echo=TRUE,fig=FALSE>>=
+#you can control the number of cores to use via argument 'ncr' 
+myr2 = padog(
+    esetm = dlist$dat.m,
+    group = dlist$ano$Group,
+    paired = dlist$design == "Paired",
+    block = dlist$ano$Block,
+    targetgs = dlist$targetGeneSets,
+    annotation = dlist$annotation,
+    gslist = "KEGG.db",
+    organism = "hsa",
+    verbose = FALSE,
+    Nmin = 3,
+    NI = 50,
+    plots = TRUE,
+    dseed = 1,
+    parallel = TRUE
+)
+# verify that the result is the same which is a built-in feature
+all.equal(myr, myr2)
+@
 
 \section{Benchmark of gene set analysis methods}
 
 The entire collection of 24 datasets available in {\tt KEGGdzPathwaysGEO} package that can be used to benchmark PADOG 
 against existing approaches is given in Table \ref{tab:datasets}:
 
-\begin{table}
+\begin{table}[h]
+\small
 \caption{\bf{The 24 datasets used in the benchmark of pathway analysis methods}}
-\begin{tabular}{rllllll}
+\noindent\makebox[\textwidth]{%
+\begin{tabularx}{1.2\textwidth}{rllllll}
   \hline
  GEOID&Pubmed& Ref.& Disease/Target pathway & KEGGID & Tissue \\
   \hline
@@ -148,7 +181,8 @@ GSE18842&20878980&\cite{pmid20878980}& Non-Small Cell Lung Cancer&hsa05223&Lung 
 GSE19188&20421987&\cite{pmid20421987}& Non-Small Cell Lung Cancer&hsa05223&Lung \\
 GSE3585&17045896&\cite{pmid17045896}& Dilated cardiomyopathy&hsa05414 &Heart\\
    \hline
-\end{tabular}
+\end{tabularx}
+}
 
 \begin{flushleft} The 24 datasets used to compare the pathway analysis methods were obtained from GEO.
 \end{flushleft}
@@ -167,59 +201,61 @@ The output should be a dataframe with columns: ID, P, Rank, Dataset, Method for 
 in that dataset (targetGeneSets).  
 
 <<eval=TRUE, echo=TRUE,fig=TRUE>>=
-
-randomF=function(set,mygslist,minsize){
-set.seed(1)
-#this loads the dataset in an ExpressionSet object called x
-data(list=set,package="KEGGdzPathwaysGEO")
-x=get(set)
-
-#Extract from the dataset the required info to be passed to padog
-exp=experimentData(x);
-dat.m=exprs(x)
-ano=pData(x)
-dataset= exp@name
-design= notes(exp)$design
-annotation= paste(x@annotation,".db",sep="")
-targetGeneSets= notes(exp)$targetGeneSets
-
-
-#get rid of duplicates probesets per ENTREZ ID by keeping the probeset 
-#with smallest p-value (computed using limma) 
-aT1=filteranot(esetm=dat.m,group=ano$Group,paired=(design=="Paired"),
- block=ano$Block,annotation=annotation)
-#create an output dataframe for this toy method with random gene set p-values
-mygslistSize=unlist(lapply(mygslist,function(x){length(intersect(aT1$ENTREZID,x))}))
-res=data.frame(ID=names(mygslist),P=runif(length(mygslist)),
- Size=mygslistSize,stringsAsFactors=FALSE)
-res$FDR=p.adjust(res$P,"fdr")
-#drop genesets with less than minsize genes in the current dataset 
-res=res[res$Size>=minsize,]
-#compute ranks
-res$Rank=rank(res$P)/dim(res)[1]*100
-#needed to compare ranks between methods; must be the same as given 
-#in mymethods argument "list(myRand="
-res$Method="myRand";
-#needed because comparisons of ranks between methods is paired at dataset level
-res$Dataset<-dataset;
-#output only result for the targetGeneSets 
-#which are gene sets expected to be relevant in this dataset
-return(res[res$ID %in% targetGeneSets,])
+randFun = function(dseed, mname = "myRand") {
+    #a helper function to pass additional variables to your method
+    getdataaslist = getdataaslist
+    return(function(set, mygslist, minsize) {#your method function
+        set.seed(dseed)
+        #this loads the dataset 
+        data(list = set, package = "KEGGdzPathwaysGEO")
+        #extract the required info using the function defined earlier 
+        dlist = getdataaslist(set)
+        #get rid of duplicates probesets per ENTREZ ID by keeping the probeset 
+        #with smallest p-value (computed using limma) 
+        aT1 = filteranot(esetm = dlist$dat.m, group = dlist$ano$Group, 
+            paired = dlist$design == "Paired", block = dlist$ano$Block, 
+            annotation = dlist$annotation)
+        #create an output dataframe for this toy method with random gene set p-values
+        mygslistSize = unlist(lapply(mygslist, function(x) {
+            length(intersect(aT1$ENTREZID, x))
+        }))
+        res = data.frame(ID = names(mygslist), P = runif(length(mygslist)),
+            Size = mygslistSize, stringsAsFactors = FALSE)
+        res$FDR = p.adjust(res$P,"fdr")
+        #drop genesets with less than minsize genes in the current dataset 
+        res = res[res$Size >= minsize,]
+        #compute ranks
+        res$Rank = rank(res$P) / dim(res)[1]*100
+        #needed to compare ranks between methods; must be the same as given 
+        #in mymethods argument "list(myRand="
+        res$Method = mname 
+        #needed because comparisons of ranks between methods is paired at dataset level
+        res$Dataset = dlist$dataset
+        #output only result for the targetGeneSets 
+        #which are gene sets expected to be relevant in this dataset
+        return(res[res$ID %in% dlist$targetGeneSets,])
+        }
+    )
 }
 
-#run the analysis on all 24 datasets and compare the new method "myRand" with 
-#PADOG and GSA (if installed) (chosen as reference since is listed first in the existingMethods)
-#if the package parallel is installed datasets are analyzed in parallel.
-#out=compPADOG(datasets=NULL,existingMethods=c("GSA","PADOG"),
- #mymethods=list(myRand=randomF),
- #gslist="KEGG.db",Nmin=3,NI=1000,plots=TRUE,verbose=FALSE)
+randomF = randFun(1)
 
-#compare myRand against PADOG on 4 datasets only
-#mysets=data(package="KEGGdzPathwaysGEO")$results[,"Item"]
-mysets=c("GSE9348","GSE8671","GSE1297")
-out=compPADOG(datasets=mysets,existingMethods=c("PADOG"),
- mymethods=list(myRand=randomF),
- gslist="KEGG.db",Nmin=3,NI=40,plots=TRUE,verbose=FALSE)
+#run the analysis on all 24 datasets and compare the new method "myRand" with 
+#PADOG and GSA (if installed) (chosen as reference since is listed first in the
+#existingMethods) 
+#if the package doParallel is installed datasets are analyzed in parallel.
+#out = compPADOG(datasets = NULL, existingMethods = c("GSA","PADOG"),
+#    mymethods = list(myRand = randomF), gslist = "KEGG.db",
+#    Nmin = 3, NI = 1000, plots = TRUE, verbose=FALSE, 
+#    parallel = TRUE, dseed = 1, pkgs = NULL)
+
+#compare myRand against PADOG on 3 datasets only
+#mysets = data(package = "KEGGdzPathwaysGEO")$results[,"Item"]
+mysets = c("GSE9348","GSE8671","GSE1297")
+out = compPADOG(datasets = mysets, existingMethods = c("PADOG"),
+    mymethods = list(myRand = randomF), 
+    gslist = "KEGG.db", Nmin = 3, NI = 40, plots = TRUE, 
+    verbose=FALSE, parallel = TRUE, dseed = 1, pkgs = NULL)
 
 print(out)
 
