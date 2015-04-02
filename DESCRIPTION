@@ -5,7 +5,7 @@ Title: Pathway Analysis with Down-weighting of Overlapping Genes
         (PADOG)
 Author: Adi Laurentiu Tarca <atarca@med.wayne.edu>; Zhonghui Xu <zhonghui.xu@gmail.com> 
 Depends: R (>= 3.0.0), KEGGdzPathwaysGEO,
-    methods
+    methods,Biobase
 Suggests: doParallel, parallel
 Maintainer: Adi Laurentiu Tarca <atarca@med.wayne.edu>
 Description: This package implements a general purpose gene set
@@ -19,7 +19,6 @@ URL:
 Collate: padog.R compPADOG.R filteranot.R
 Imports: limma,
     AnnotationDbi,
-    Biobase,
     GSA,
     foreach,
     doRNG,
