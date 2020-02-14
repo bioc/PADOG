@@ -3,7 +3,7 @@
 export(compPADOG)
 export(filteranot)
 export(padog)
-import(KEGG.db)
+import(KEGGREST)
 import(KEGGdzPathwaysGEO)
 import(hgu133a.db)
 import(hgu133plus2.db)
