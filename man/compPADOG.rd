@@ -6,7 +6,7 @@ This is a general purpose function to compare a given gene set analysis method i
 public datasets.
 }
 \usage{
-compPADOG(datasets=NULL,existingMethods=c("GSA","PADOG"),mymethods=NULL,gs.names=NULL,gslist="KEGG.db",organism="hsa",Nmin=3,NI=1000,parallel=TRUE,
+compPADOG(datasets=NULL,existingMethods=c("GSA","PADOG"),mymethods=NULL,gs.names=NULL,gslist="KEGGRESTpathway",organism="hsa",Nmin=3,NI=1000,parallel=TRUE,
           ncr=NULL, pkgs=NULL, expVars=NULL, dseed=NULL, plots=FALSE,verbose=FALSE)
 }
 \arguments{
@@ -15,9 +15,9 @@ compPADOG(datasets=NULL,existingMethods=c("GSA","PADOG"),mymethods=NULL,gs.names
   \item{existingMethods}{A character vector with one or more of the predefined methods c("GSA","PADOG"). The first is used as reference method.}
   \item{mymethods}{A list whose elements are valid functions implementing gene set analysis methods. See the example to see what arguments the functions have to take in and 
   what kind of output they need to produce.}
-  \item{gslist}{Either the value "KEGG.db" or a list with the gene sets. If set to "KEGG.db", then gene sets will be made of all KEGG pathways for human since all datasets available in 
+  \item{gslist}{Either the value "KEGGRESTpathway" or a list with the gene sets. If set to "KEGGRESTpathway", then gene sets will be made of all KEGG pathways for human since all datasets available in 
   PADOG are for human.}
-   \item{organism}{A three letter string giving the name of the organism supported by the "KEGG.db" package.}
+   \item{organism}{A three letter string giving the name of the organism supported by the "KEGGRESTpathway" package.}
   \item{gs.names}{A character vector giving additional information about each gene set. For instance when gene seta are pathways, the full name of the pathway would be a meaningful gene set name.}
   \item{Nmin}{The minimum size of gene sets to be included in the analysis for all methods.}
   \item{NI}{Number of iterations to determine the gene set score significance p-values in PADOG and GSA methods.}
@@ -113,14 +113,14 @@ return(res[res$ID \%in\% targetGeneSets,])
 #if the package parallel is installed datasets are analyzed in parallel.
 #out=compPADOG(datasets=NULL,existingMethods=c("GSA","PADOG"),
  #mymethods=list(myRand=randomF),
- #gslist="KEGG.db",Nmin=3,NI=1000,plots=TRUE,verbose=FALSE)
+ #gslist="KEGGRESTpathway",Nmin=3,NI=1000,plots=TRUE,verbose=FALSE)
 
 #compare myRand against PADOG on 4 datasets only
 #mysets=data(package="PADOGsets")$results[,"Item"]
 mysets=c("GSE9348","GSE8671","GSE1297")
 out=compPADOG(datasets=mysets,existingMethods=c("PADOG"),
  mymethods=list(myRand=randomF),
- gslist="KEGG.db",Nmin=3,NI=20,plots=FALSE,verbose=FALSE)
+ gslist="KEGGRESTpathway",Nmin=3,NI=20,plots=FALSE,verbose=FALSE)
 
 }
 

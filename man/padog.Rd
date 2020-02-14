@@ -6,7 +6,7 @@ This is a general purpose gene set analysis method that downplays the importance
 The package provides also a benchmark for gene set analysis in terms of sensitivity and ranking using 24 public datasets.
 }
 \usage{
-padog(esetm=NULL,group=NULL,paired=FALSE,block=NULL,gslist="KEGG.db",organism="hsa",
+padog(esetm=NULL,group=NULL,paired=FALSE,block=NULL,gslist="KEGGRESTpathway",organism="hsa",
       annotation=NULL,gs.names=NULL,NI=1000,plots=FALSE,targetgs=NULL,Nmin=3,
       verbose=TRUE,parallel=FALSE,dseed=NULL,ncr=NULL)
 }
@@ -17,12 +17,12 @@ padog(esetm=NULL,group=NULL,paired=FALSE,block=NULL,gslist="KEGG.db",organism="h
   \item{paired}{A logical value to indicate if the samples in the two groups are paired.}
   \item{block}{A character vector indicating the block ids of the samples classified by the group variable, if  \code{paired=TRUE}.  The paired samples must have 
   the same block value.}
-  \item{gslist}{Either the value "KEGG.db" or a list with the gene sets. If set to "KEGG.db", then gene sets will be made of all KEGG pathways for the \code{organism} 
+  \item{gslist}{Either the value "KEGGRESTpathway" or a list with the gene sets. If set to "KEGGRESTpathway", then gene sets will be made of all KEGG pathways for the \code{organism} 
   specified. If a list is provided, instead, each element of the list should be a character vector with the identifiers for the genes. The identifiers can be probe(sets) 
   ids if the \code{annotation} argument is set to a valid annotation package, otherwise the gene identifiers must be of the same kind as the rownames of the matrix esetm.}
-  \item{annotation}{A valid chip annotation package if the rownames of \code{esetm} are probe(set) ids and \code{gslist} contains ENTREZ identifiers or \code{gslist} is set to "KEGG.db".
+  \item{annotation}{A valid chip annotation package if the rownames of \code{esetm} are probe(set) ids and \code{gslist} contains ENTREZ identifiers or \code{gslist} is set to "KEGGRESTpathway".
   If the rownames are other gene identifies, then \code{annotation} has tyo be set to NULL, and the row names of \code{esetm} needs to be unique and be found among elements of \code{gslist}}
-  \item{organism}{A three letter string giving the name of the organism supported by the "KEGG.db" package.}
+  \item{organism}{A three letter string giving the name of the organism supported by the "KEGGREST" package.}
     \item{gs.names}{Character vector with the names of the gene sets. If specified, must have the same length as gslist.}
   \item{NI}{Number of iterations to determine the gene set score significance p-values.}
   \item{plots}{If set to TRUE then the distribution of the PADOG scores with and without weighting the genes in raw and standardized form are shown using boxplots. 
@@ -82,7 +82,7 @@ paired=design=="Paired",
 block=ano$Block,
 targetgs=targetGeneSets,
 annotation=annotation,
-gslist="KEGG.db",
+gslist="KEGGRESTpathway",
 organism="hsa",
 verbose=TRUE,
 Nmin=3,
@@ -98,7 +98,7 @@ paired=design=="Paired",
 block=ano$Block,
 targetgs=targetGeneSets,
 annotation=annotation,
-gslist="KEGG.db",
+gslist="KEGGRESTpathway",
 organism="hsa",
 verbose=TRUE,
 Nmin=3,
