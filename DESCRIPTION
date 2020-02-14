@@ -1,6 +1,6 @@
 Package: PADOG
 Version: 1.29.0
-Date: 2015-03-20
+Date: 2020-1-31
 Title: Pathway Analysis with Down-weighting of Overlapping Genes
         (PADOG)
 Author: Adi Laurentiu Tarca <atarca@med.wayne.edu>; Zhonghui Xu <zhonghui.xu@gmail.com> 
@@ -24,7 +24,7 @@ Imports: limma,
     doRNG,
     hgu133plus2.db,
     hgu133a.db,
-    KEGG.db,
+    KEGGREST,
     nlme
 LazyLoad: yes
 biocViews: Microarray, OneChannel, TwoChannel
