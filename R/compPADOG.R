@@ -1,7 +1,7 @@
 if(getRversion() >= "2.15.1")  utils::globalVariables(c("ini", "outi"))
 
 compPADOG = function(datasets = NULL, existingMethods = c("GSA", "PADOG"), mymethods = NULL, 
-                     gs.names = NULL, gslist = "KEGG.db", organism = "hsa", Nmin = 3, NI = 1000, parallel = TRUE, 
+                     gs.names = NULL, gslist = "KEGGRESTpathway", organism = "hsa", Nmin = 3, NI = 1000, parallel = TRUE, 
                      ncr = NULL, pkgs = NULL, expVars = NULL, dseed = NULL, plots = FALSE, verbose = FALSE) {
   
   if (is.null(datasets)) {
@@ -113,15 +113,18 @@ compPADOG = function(datasets = NULL, existingMethods = c("GSA", "PADOG"), mymet
   refMethod = names(GSmethods)[1]
   
   
-  # check GS
-  if (length(gslist) == 1 && gslist == "KEGG.db") {
-    pw2id = as.list(KEGGPATHID2EXTID)
-    gslist = pw2id[grep(organism, names(pw2id))]
-    names(gslist) = sub(paste("^", organism, sep = ""), "", names(gslist))
-    gs.names = unlist(as.list(KEGGPATHID2NAME)[names(gslist)])
-    rm(pw2id)
-  }
-  stopifnot(class(gslist) == "list")
+   # check GS
+  if (length(gslist) == 1 && gslist == "KEGGRESTpathway") {
+    stopifnot(nchar(organism) == 3)
+    res <- keggLink("pathway", organism)
+    a=data.frame(path=gsub(paste("path:",organism,sep=""),"",res),gns=gsub(paste(organism,":",sep=""),"",names(res)))
+    gslist=tapply(a$gns,a$path,function(x){as.character(x)})
+    gs.names=keggList("pathway", organism)[paste("path:",organism,names(gslist),sep="")]
+    names(gs.names)<-names(gslist)
+    stopifnot(length(gslist) >= 3)
+    rm(res,a)
+    }
+  stopifnot(mode(gslist) == "list")
   stopifnot(length(gslist) >= 3)
   if (!is.null(gs.names)) {
     stopifnot(length(gslist) == length(gs.names))

@@ -1,16 +1,17 @@
-padog <- function(esetm = NULL, group = NULL, paired = FALSE, block = NULL, gslist = "KEGG.db", 
+padog <- function(esetm = NULL, group = NULL, paired = FALSE, block = NULL, gslist = "KEGGRESTpathway", 
                   organism = "hsa", annotation = NULL, gs.names = NULL, NI = 1000, plots = FALSE, 
                   targetgs = NULL, Nmin = 3, verbose = TRUE, parallel = FALSE, dseed = NULL, ncr = NULL) {
   
   # initialize the gslist if using KEGG
-  if (length(gslist) == 1 && gslist == "KEGG.db") {
+  if (length(gslist) == 1 && gslist == "KEGGRESTpathway") {
     stopifnot(nchar(organism) == 3)
-    pw2id = as.list(KEGGPATHID2EXTID)
-    gslist = pw2id[grep(organism, names(pw2id))]
-    names(gslist) = sub(paste("^", organism, sep = ""), "", names(gslist))
-    gs.names = unlist(as.list(KEGGPATHID2NAME)[names(gslist)])
+    res <- keggLink("pathway", organism)
+    a=data.frame(path=gsub(paste("path:",organism,sep=""),"",res),gns=gsub(paste(organism,":",sep=""),"",names(res)))
+    gslist=tapply(a$gns,a$path,function(x){as.character(x)})
+    gs.names=keggList("pathway", organism)[paste("path:",organism,names(gslist),sep="")]
+    names(gs.names)<-names(gslist)
     stopifnot(length(gslist) >= 3)
-    rm(pw2id)
+    rm(res,a)
   }
   
   # check arguments
@@ -26,7 +27,7 @@ padog <- function(esetm = NULL, group = NULL, paired = FALSE, block = NULL, gsli
     stopifnot(all(table(block) == 2))
   }
   
-  stopifnot(class(gslist) == "list")
+  stopifnot(mode(gslist) == "list")
   stopifnot(length(gslist) >= 3)
   if (!is.null(gs.names)) {
     stopifnot(length(gslist) == length(gs.names))
