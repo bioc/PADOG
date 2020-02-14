@@ -17,6 +17,7 @@
 
 \bibliographystyle{abbrvnat}
 \begin{document}
+\SweaveOpts{concordance=TRUE}
 
 \title{\bf Bioconductor's PADOG package}
 \author{Adi L. Tarca$^{1,2,3}$}
@@ -25,7 +26,7 @@
 
 $^1$Department of Computer Science, Wayne State University\\
 $^2$Bioinformatics and Computational Biology Unit of the NIH Perinatology Research Branch\\
-$^3$Center for Molecular Medicine and Genetics, Wayne State University \\
+$^3$Department of Obstetrics and Gynecology, Wayne State University \\
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -89,7 +90,7 @@ myr = padog(
     block = dlist$ano$Block,
     targetgs = dlist$targetGeneSets,
     annotation = dlist$annotation,
-    gslist = "KEGG.db",
+    gslist = "KEGGRESTpathway",
     organism = "hsa",
     verbose = FALSE,
     Nmin = 3,
@@ -130,7 +131,7 @@ myr2 = padog(
     block = dlist$ano$Block,
     targetgs = dlist$targetGeneSets,
     annotation = dlist$annotation,
-    gslist = "KEGG.db",
+    gslist = "KEGGRESTpathway",
     organism = "hsa",
     verbose = FALSE,
     Nmin = 3,
@@ -245,7 +246,7 @@ randomF = randFun(1)
 #existingMethods) 
 #if the package doParallel is installed datasets are analyzed in parallel.
 #out = compPADOG(datasets = NULL, existingMethods = c("GSA","PADOG"),
-#    mymethods = list(myRand = randomF), gslist = "KEGG.db",
+#    mymethods = list(myRand = randomF), gslist = "KEGGRESTpathway",
 #    Nmin = 3, NI = 1000, plots = TRUE, verbose=FALSE, 
 #    parallel = TRUE, dseed = 1, pkgs = NULL)
 
@@ -254,7 +255,7 @@ randomF = randFun(1)
 mysets = c("GSE9348","GSE8671","GSE1297")
 out = compPADOG(datasets = mysets, existingMethods = c("PADOG"),
     mymethods = list(myRand = randomF), 
-    gslist = "KEGG.db", Nmin = 3, NI = 40, plots = TRUE, 
+    gslist = "KEGGRESTpathway", Nmin = 3, NI = 40, plots = TRUE, 
     verbose=FALSE, parallel = TRUE, dseed = 1, pkgs = NULL)
 
 print(out)
