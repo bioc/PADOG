@@ -15,7 +15,7 @@ padog <- function(esetm = NULL, group = NULL, paired = FALSE, block = NULL, gsli
   }
   
   # check arguments
-  stopifnot(class(esetm) == "matrix")
+  stopifnot("matrix"%in%class(esetm))
   stopifnot(all(dim(esetm) > 4))
   
   stopifnot(class(group) %in% c("factor", "character"))
