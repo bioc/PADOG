@@ -7,7 +7,7 @@ Author: Adi Laurentiu Tarca <atarca@med.wayne.edu>; Zhonghui Xu <zhonghui.xu@gma
 Depends: R (>= 3.0.0), KEGGdzPathwaysGEO,
     methods,Biobase
 Suggests: doParallel, parallel
-Maintainer: Adi Laurentiu Tarca <atarca@med.wayne.edu>
+Maintainer: Adi L. Tarca <atarca@med.wayne.edu>
 Description: This package implements a general purpose gene set
         analysis method called PADOG that downplays the importance of
         genes that apear often accross the sets of genes to be
