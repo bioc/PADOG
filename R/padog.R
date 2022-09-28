@@ -54,7 +54,7 @@ padog <- function(esetm = NULL, group = NULL, paired = FALSE, block = NULL, gsli
   
   # compute gene frequencies accross genesets
   gf = table(unlist(gslist))
-  if (!all(gf == 1)) {
+  if (!(var(gf)==0)) {
     if (quantile(gf, 0.99) > mean(gf) + 3 * sd(gf)) {
       gf[gf > quantile(gf, 0.99)] <- quantile(gf, 0.99)
     }
