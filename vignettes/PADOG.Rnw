@@ -24,10 +24,9 @@
 
 \maketitle
 
-$^1$Department of Computer Science, Wayne State University\\
-$^2$Bioinformatics and Computational Biology Unit of the NIH Perinatology Research Branch\\
-$^3$Department of Obstetrics and Gynecology, Wayne State University \\
-
+$^1$Center for Molecular Medicine and Genetics, Wayne State University\\
+$^2$Department of Obstetrics and Gynecology, Wayne State University \\
+$^3$Department of Computer Science, Wayne State University\\
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
