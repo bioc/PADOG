@@ -50,7 +50,7 @@ with diseased samples.
 \section{Pathway / gene set analysis with PADOG package}
 
 This document provides basic introduction on how to use the {\tt PADOG} package. For extended 
-description of the methods used by this package please consult \cite{TarcaPADOG:2012}.\\ 
+description of the methods used by this package please consult \cite{TarcaPADOG:2012} and \cite{TarcaCompPADOG:2013}.\\ 
 
 We demonstrate the functionality of this package using a colorectal cancer dataset obtained using 
 Affymetrix GeneChip technology and available 
