@@ -52,8 +52,8 @@ See cited documents for more details.
 }
 
 \references{
-Adi L. Tarca, Sorin Draghici, Gaurav Bhatti, Roberto Romero, Down-weighting overlapping genes improves gene set analysis, BMC Bioinformatics, 2012, submitted.  \cr
-
+Adi L. Tarca, Sorin Draghici, Gaurav Bhatti, Roberto Romero, Down-weighting overlapping genes improves gene set analysis, BMC Bioinformatics, 13(136), 2012.  \cr
+Adi L. Tarca, Gaurav Bhatti, Roberto Romero, A Comparison of Gene Set Analysis Methods in Terms of Sensitivity, Prioritization and Specificity, PLoS One. 8(11), 2013. \cr
 }
 
 \author{Adi Laurentiu Tarca <atarca@med.wayne.edu>}
