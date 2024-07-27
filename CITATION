@@ -1,0 +1,16 @@
+citHeader("To cite PADOG in publications use:")
+
+citEntry(entry="Article",
+  author = "Adi L. Tarca and  Sorin Draghici and Gaurav Bhatti and Roberto Romero",
+  title = "Down-weighting overlapping genes improves gene set analysis",
+  journal = "BMC Bioinformatics",
+  year = "2012",
+  volume = "13",
+  number = "136",
+  pages = "",
+  textVersion = paste("Adi L. Tarca, Sorin Draghici, Gaurav Bhatti, Roberto Romero",
+      "Down-weighting overlapping genes improves gene set analysis",
+      "BMC Bioinformatics, 13(136), 2012.")
+)
+
+
