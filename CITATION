@@ -1,4 +1,4 @@
-citHeader("To cite PADOG in publications use:")
+citHeader("To cite PADOG package in publications use:")
 
 citEntry(entry="Article",
   author = "Adi L. Tarca and  Sorin Draghici and Gaurav Bhatti and Roberto Romero",
