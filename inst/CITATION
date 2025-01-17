@@ -8,7 +8,7 @@ citEntry(entry="Article",
   volume = "13",
   number = "136",
   pages = "",
-  textVersion = "Adi L. Tarca, Sorin Draghici, Gaurav Bhatti, Roberto Romero, Down-weighting overlapping genes improves gene set analysis, BMC Bioinformatics, 13(136), 2012.")
+  textVersion = "Adi L. Tarca, Sorin Draghici, Gaurav Bhatti, Roberto Romero, Down-weighting overlapping genes improves gene set analysis, BMC Bioinformatics, 13(136), 2012."
 )
 
 citEntry(entry="Article",
@@ -19,5 +19,5 @@ citEntry(entry="Article",
   volume = "8",
   number = "11",
   pages = "",
-  textVersion = "Adi L. Tarca, Gaurav Bhatti and Roberto Romero, A Comparison of Gene Set Analysis Methods in Terms of Sensitivity, Prioritization and Specificity, PLoS One, 8(11), 2013.")
+  textVersion = "Adi L. Tarca, Gaurav Bhatti and Roberto Romero, A Comparison of Gene Set Analysis Methods in Terms of Sensitivity, Prioritization and Specificity, PLoS One, 8(11), 2013."
 )
