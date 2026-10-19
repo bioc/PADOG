@@ -1,20 +1,21 @@
 if(getRversion() >= "2.15.1")  utils::globalVariables(c("ini", "outi"))
 
-compPADOG = function(datasets = NULL, existingMethods = c("GSA", "PADOG"), mymethods = NULL, 
-                     gs.names = NULL, gslist = "KEGGRESTpathway", organism = "hsa", Nmin = 3, NI = 1000, parallel = TRUE, 
+compPADOG = function(datasets = NULL,collection="KEGGdzPathwaysGEO", existingMethods = c("GSA", "PADOG"), mymethods = NULL, 
+                      gslist = NULL,gs.names = NULL, Nmin = 3, NI = 1000, parallel = TRUE, 
                      ncr = NULL, pkgs = NULL, expVars = NULL, dseed = NULL, plots = FALSE, verbose = FALSE) {
   
-  if (is.null(datasets)) {
-    files = data(package = "KEGGdzPathwaysGEO")$results[, "Item"]
-  } else {
-    files = datasets
-    
-  }
+  files=loadCompPADOGBenchmark(dataset = datasets,collection=collection,assign=FALSE)
   
-  data(list = files, package = "KEGGdzPathwaysGEO", envir=environment())
+  benchmarkData <- lapply(files, function(nm) {
+    e <- new.env(parent = emptyenv())
+    loadCompPADOGBenchmark(dataset = nm, envir = e)
+    get(nm, envir = e)
+  })
+  names(benchmarkData) <- files
+  
   
   getdataaslist = function(x) {
-    x = get(x, envir=parent.frame())
+    x = benchmarkData[[x]]
     exp = experimentData(x)
     dataset = exp@name
     disease = notes(exp)$disease
@@ -30,11 +31,9 @@ compPADOG = function(datasets = NULL, existingMethods = c("GSA", "PADOG"), mymet
   }
   
   
-  
-  
   padogF = function(set, mygslist, minsize) {
+
     list = getdataaslist(set)
-    
     res = padog(esetm = list$dat.m, group = list$ano$Group, paired = list$design == 
                   "Paired", block = list$ano$Block, annotation = list$annotation, gslist = mygslist, 
                 verbose = verbose, Nmin = minsize, NI = NI, plots = FALSE, parallel = parallel, 
@@ -112,18 +111,6 @@ compPADOG = function(datasets = NULL, existingMethods = c("GSA", "PADOG"), mymet
   GSMok = GSMok[!duplicated(names(GSMok))]
   refMethod = names(GSmethods)[1]
   
-  
-   # check GS
-  if (length(gslist) == 1 && gslist == "KEGGRESTpathway") {
-    stopifnot(nchar(organism) == 3)
-    res <- keggLink("pathway", organism)
-    a=data.frame(path=gsub(paste("path:",organism,sep=""),"",res),gns=gsub(paste(organism,":",sep=""),"",names(res)))
-    gslist=tapply(a$gns,a$path,function(x){as.character(x)})
-    gs.names=keggList("pathway", organism)[paste("path:",organism,names(gslist),sep="")]
-    names(gs.names)<-names(gslist)
-    stopifnot(length(gslist) >= 3)
-    rm(res,a)
-    }
   stopifnot(mode(gslist) == "list")
   stopifnot(length(gslist) >= 3)
   if (!is.null(gs.names)) {
@@ -158,8 +145,9 @@ compPADOG = function(datasets = NULL, existingMethods = c("GSA", "PADOG"), mymet
     }
     doParallel::registerDoParallel(clust)
     tryCatch({
-      parRes <- foreach(outi = seq_along(GSMok), .combine = "c", .packages = pkgs, .export = expVars) %:% 
-        foreach(ini = seq_along(files),  .combine = "c", .packages = pkgs, .export = expVars) %dopar% {
+      parRes <- foreach(outi = seq_along(GSMok), .combine = "c", .packages = c(pkgs), .export = c(expVars)) %:% 
+        foreach(ini = seq_along(files),  .combine = "c", .packages = c(pkgs), .export = c(expVars)) %dopar% {
+          
           inres = lapply(files[ini], GSMok[[outi]], mygslist = gslist, minsize = Nmin)
           if (verbose) {
             cat("Finish:", names(GSMok)[outi], " ------> ", files[ini], "\n")
@@ -265,8 +253,9 @@ compPADOG = function(datasets = NULL, existingMethods = c("GSA", "PADOG"), mymet
   
   nmets = length(psList)
   
-  somecols = c("lightgrey", "lightblue", "orange", "red", "purple", "lightgreen")
-  set.seed(1)
+  somecols = c("lightgrey", "lightblue", "orange", "red",  "lightgreen","pink")
+  somecolsd = c("black", "blue", "darkorange", "darkred", "darkgreen","red")
+
   if (nmets > 6) {
     somecols = c(somecols, sample(setdiff(colors(), somecols))[1:(nmets - 6)])
   }
@@ -277,7 +266,13 @@ compPADOG = function(datasets = NULL, existingMethods = c("GSA", "PADOG"), mymet
     on.exit(par(usrPar))
     
     boxplot(psList, ylab = paste("p-value"), las = 3, col = somecols[1:nmets])
+    stripchart(psList,method = "jitter", vertical = TRUE, add = TRUE,
+               pch = 16, col = somecolsd[1:nmets],cex = 2)
+    
     boxplot(rankList, ylab = "Rank(%)", las = 3, col = somecols[1:nmets])
+    stripchart(rankList,method = "jitter", vertical = TRUE, add = TRUE,
+               pch = 16, col = somecolsd[1:nmets],cex = 2)
+    
     
     mff2 = function(x) {
       x - rankList[[refMethod]]
@@ -292,6 +287,7 @@ compPADOG = function(datasets = NULL, existingMethods = c("GSA", "PADOG"), mymet
     }
     boxplot(newranks, ylab = paste("Rank(%)-Rank ", refMethod, " (%)"), las = 3, 
             col = somecols[2:nmets], names = names(newranks), xlab = xlb)
+  
     abline(h = 0)
     
   }

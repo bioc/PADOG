@@ -41,7 +41,7 @@ Adi L. Tarca, Gaurav Bhatti, Roberto Romero, A Comparison of Gene Set Analysis M
 
 #run padog on a colorectal cancer dataset of the 24 datasets benchmark GSE9348
 set="GSE9348"
-data(list=set,package="KEGGdzPathwaysGEO")
+loadCompPADOGBenchmark(set)
 x=get(set)
 #Extract from the dataset the required info
 exp=experimentData(x);

@@ -3,11 +3,11 @@
 \title{Pathway Analysis with Down-weighting of Overlapping Genes (PADOG)}
 \description{
 This is a general purpose gene set analysis method that downplays the importance of genes that apear often accross the sets of genes analyzed. 
-The package provides also a benchmark for gene set analysis in terms of sensitivity and ranking using 24 public datasets.
+The package provides also a benchmark for gene set analysis in terms of sensitivity and ranking using 42 public datasets.
 }
 \usage{
-padog(esetm=NULL,group=NULL,paired=FALSE,block=NULL,gslist="KEGGRESTpathway",organism="hsa",
-      annotation=NULL,gs.names=NULL,NI=1000,plots=FALSE,targetgs=NULL,Nmin=3,
+padog(esetm=NULL,group=NULL,paired=FALSE,block=NULL,gslist=NULL,gs.names=NULL,
+      annotation=NULL,NI=1000,plots=FALSE,targetgs=NULL,Nmin=3,
       verbose=TRUE,parallel=FALSE,dseed=NULL,ncr=NULL)
 }
 \arguments{
@@ -17,14 +17,13 @@ padog(esetm=NULL,group=NULL,paired=FALSE,block=NULL,gslist="KEGGRESTpathway",org
   \item{paired}{A logical value to indicate if the samples in the two groups are paired.}
   \item{block}{A character vector indicating the block ids of the samples classified by the group variable, if  \code{paired=TRUE}.  The paired samples must have 
   the same block value.}
-  \item{gslist}{Either the value "KEGGRESTpathway" or a list with the gene sets. If set to "KEGGRESTpathway", then gene sets will be made of all KEGG pathways for the \code{organism} 
-  specified. If a list is provided, instead, each element of the list should be a character vector with the identifiers for the genes. The identifiers can be probe(sets) 
-  ids if the \code{annotation} argument is set to a valid annotation package, otherwise the gene identifiers must be of the same kind as the rownames of the matrix esetm.}
+  \item{gslist}{A list with the gene sets. Each element of the list should be a character vector with the identifiers for the genes. The identifiers can be probe(sets) 
+  ids if the \code{annotation} argument is set to a valid annotation package, otherwise the gene identifiers must be of the same kind as the rownames of the matrix esetm.
+  See example how to create gene set list for the human KEGG pathways.}
+  \item{gs.names}{Character vector with the names of the gene sets. If specified, must have the same length as gslist.}
   \item{annotation}{A valid chip annotation package if the rownames of \code{esetm} are probe(set) ids and \code{gslist} contains ENTREZ identifiers or \code{gslist} is set to "KEGGRESTpathway".
   If the rownames are other gene identifies, then \code{annotation} has tyo be set to NULL, and the row names of \code{esetm} needs to be unique and be found among elements of \code{gslist}}
-  \item{organism}{A three letter string giving the name of the organism supported by the "KEGGREST" package.}
-    \item{gs.names}{Character vector with the names of the gene sets. If specified, must have the same length as gslist.}
-  \item{NI}{Number of iterations to determine the gene set score significance p-values.}
+   \item{NI}{Number of iterations to determine the gene set score significance p-values.}
   \item{plots}{If set to TRUE then the distribution of the PADOG scores with and without weighting the genes in raw and standardized form are shown using boxplots. 
   A pdf file will be created in the current directory having the name provided in the \code{targetgs} field. The scores for the \code{targetgs} gene set will be shown
    in red. }
@@ -60,10 +59,10 @@ Adi L. Tarca, Gaurav Bhatti, Roberto Romero, A Comparison of Gene Set Analysis M
 
 \examples{
 
-#run padog on a colorectal cancer dataset of the 24 datasets benchmark GSE9348
+#run padog on a colorectal cancer dataset, GSE9348
 #use NI=1000 for accurate results.
 set="GSE9348"
-data(list=set,package="KEGGdzPathwaysGEO")
+loadCompPADOGBenchmark(set,collection="KEGGdzPathwaysGEO")
 x=get(set)
 #Extract from the dataset the required info
 exp=experimentData(x);
@@ -74,6 +73,13 @@ design= notes(exp)$design
 annotation= paste(x@annotation,".db",sep="")
 targetGeneSets= notes(exp)$targetGeneSets
 
+#prepare KEGG pathways for human as gene list 
+library(KEGGREST)
+res <- keggLink("pathway", "hsa")
+a=data.frame(path=gsub(paste("path:","hsa",sep=""),"",res),gns=gsub(paste("hsa",":",sep=""),"",names(res)))
+gslist=tapply(a$gns,a$path,function(x){as.character(x)})
+gs.names=keggList("pathway", "hsa")[paste("hsa",names(gslist),sep="")]
+names(gs.names)<-names(gslist)
 
 myr=padog(
 esetm=dat.m,
@@ -82,36 +88,17 @@ paired=design=="Paired",
 block=ano$Block,
 targetgs=targetGeneSets,
 annotation=annotation,
-gslist="KEGGRESTpathway",
-organism="hsa",
+gslist=gslist,
+gs.names=gs.names,
 verbose=TRUE,
 Nmin=3,
-NI=25,
+NI=100,
 plots=FALSE,
+parallel = TRUE,
 dseed=1)
 
-
-myr2=padog(
-esetm=dat.m,
-group=ano$Group,
-paired=design=="Paired",
-block=ano$Block,
-targetgs=targetGeneSets,
-annotation=annotation,
-gslist="KEGGRESTpathway",
-organism="hsa",
-verbose=TRUE,
-Nmin=3,
-NI=25,
-plots=FALSE,
-dseed=1,
-paral=TRUE,
-ncr=2)
-
-
+myr$Name = gsub("- Homo sapiens (human)", "", myr$Name, fixed = TRUE)
 myr[1:20,]
-
-all.equal(myr, myr2)
 
 
 }

@@ -1,19 +1,8 @@
-padog <- function(esetm = NULL, group = NULL, paired = FALSE, block = NULL, gslist = "KEGGRESTpathway", 
-                  organism = "hsa", annotation = NULL, gs.names = NULL, NI = 1000, plots = FALSE, 
+padog <- function(esetm = NULL, group = NULL, paired = FALSE, block = NULL, gslist = NULL,gs.names = NULL, 
+                  annotation = NULL, NI = 1000, plots = FALSE, 
                   targetgs = NULL, Nmin = 3, verbose = TRUE, parallel = FALSE, dseed = NULL, ncr = NULL) {
   
-  # initialize the gslist if using KEGG
-  if (length(gslist) == 1 && gslist == "KEGGRESTpathway") {
-    stopifnot(nchar(organism) == 3)
-    res <- keggLink("pathway", organism)
-    a=data.frame(path=gsub(paste("path:",organism,sep=""),"",res),gns=gsub(paste(organism,":",sep=""),"",names(res)))
-    gslist=tapply(a$gns,a$path,function(x){as.character(x)})
-    gs.names=keggList("pathway", organism)[paste("path:",organism,names(gslist),sep="")]
-    names(gs.names)<-names(gslist)
-    stopifnot(length(gslist) >= 3)
-    rm(res,a)
-  }
-  
+ 
   # check arguments
   stopifnot("matrix"%in%class(esetm))
   stopifnot(all(dim(esetm) > 4))
@@ -261,7 +250,7 @@ rm(parRes)
 ########################################################### 
 meanAbsT0 = MSabsT[, 1]
 padog0 = MSTop[, 1]
-plotIte = min(NI, 21)
+plotIte = min(NI, 11)
 MSabsT_raw = MSabsT
 MSTop_raw = MSTop
 
@@ -286,25 +275,25 @@ if (plots) {
   
   boxplot(MSabsT_raw[, 1:plotIte] ~ col(MSabsT_raw[, 1:plotIte]), col = c("lightblue", 
                                                                           rep("whitesmoke", NI)), names = c("0", 1:(plotIte - 1)), cex.axis = 0.8, 
-          main = "ABSmT scores after first standardization", cex.main = 0.6)
+          main = "ABSmT scores after first standardization", cex.main = 0.6,xlab="Iterations")
   points(1:plotIte, MSabsT_raw[names(gslist) == targetgs, 1:plotIte], col = "red", 
          pch = 19)
   abline(h = MSabsT_raw[names(gslist) == targetgs, 1], col = "red")
   boxplot(MSTop_raw[, 1:plotIte] ~ col(MSTop_raw[, 1:plotIte]), col = c("lightblue", 
                                                                         rep("whitesmoke", NI)), names = c("0", 1:(plotIte - 1)), cex.axis = 0.8, 
-          main = "PADOG after first standardization", cex.main = 0.6)
+          main = "PADOG after first standardization", cex.main = 0.6,xlab="Iterations")
   points(1:plotIte, MSTop_raw[names(gslist) == targetgs, 1:plotIte], col = "red", 
          pch = 19)
   abline(h = MSTop_raw[names(gslist) == targetgs, 1], col = "red")
   boxplot(MSabsT[, 1:plotIte] ~ col(MSabsT[, 1:plotIte]), col = c("lightblue", 
                                                                   rep("whitesmoke", NI)), names = c("0", 1:(plotIte - 1)), cex.axis = 0.8, 
-          main = "ABSmT scores second standardization", cex.main = 0.6)
+          main = "ABSmT scores second standardization", cex.main = 0.6,xlab="Iterations")
   points(1:plotIte, MSabsT[names(gslist) == targetgs, 1:plotIte], col = "red", 
          pch = 19)
   abline(h = MSabsT[names(gslist) == targetgs, 1], col = "red")
   boxplot(MSTop[, 1:plotIte] ~ col(MSTop[, 1:plotIte]), col = c("lightblue", 
                                                                 rep("whitesmoke", NI)), names = c("0", 1:(plotIte - 1)), cex.axis = 0.8, 
-          main = "PADOG after second standardization", cex.main = 0.6)
+          main = "PADOG after second standardization", cex.main = 0.6,xlab="Iterations")
   points(1:plotIte, MSTop[names(gslist) == targetgs, 1:plotIte], col = "red", 
          pch = 19)
   abline(h = MSTop[names(gslist) == targetgs, 1], col = "red")

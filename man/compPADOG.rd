@@ -1,27 +1,30 @@
 \name{compPADOG}
 \alias{compPADOG}
-\title{Benchmark for gene set analysis methods using 24 datasets}
+\title{Benchmark for gene set analysis methods introduced by Tarca et al. in the PADOG package}
 \description{
 This is a general purpose function to compare a given gene set analysis method in terms of sensitivity and ranking agains PADOG and GSA (if installed) using 24 
 public datasets.
 }
 \usage{
-compPADOG(datasets=NULL,existingMethods=c("GSA","PADOG"),mymethods=NULL,gs.names=NULL,gslist="KEGGRESTpathway",organism="hsa",Nmin=3,NI=1000,parallel=TRUE,
+compPADOG(datasets=NULL,collection="KEGGdzPathwaysGEO",existingMethods=c("GSA","PADOG"),mymethods=NULL,gslist = NULL,gs.names=NULL,Nmin=3,NI=1000,parallel=TRUE,
           ncr=NULL, pkgs=NULL, expVars=NULL, dseed=NULL, plots=FALSE,verbose=FALSE)
 }
 \arguments{
-  \item{datasets}{A character vector with valid names of datasets to use from the PADOGsets package. If left NULL all datasets avalibale in PADOGsets will be used.
+  \item{datasets}{A character vector with valid names of datasets to use among all 42 datasets availble via loadCompPADOGBenchmark
+  and availble at https://zenodo.org/records/23192308. If left NULL, the argument collection is used to determine what datasets will be used.
   }
+  \item{collection}{A character string specifying the benchmark data collection to use. Valid values are \code{"KEGGdzPathwaysGEO"},
+\code{"KEGGandMetacoreDzPathwaysGEO"}, or \code{"all"}. If \code{"all"}, datasets from both collections will be used. If \code{NULL}, the collection is inferred from \code{dataset}, when
+possible.
+}
   \item{existingMethods}{A character vector with one or more of the predefined methods c("GSA","PADOG"). The first is used as reference method.}
   \item{mymethods}{A list whose elements are valid functions implementing gene set analysis methods. See the example to see what arguments the functions have to take in and 
   what kind of output they need to produce.}
-  \item{gslist}{Either the value "KEGGRESTpathway" or a list with the gene sets. If set to "KEGGRESTpathway", then gene sets will be made of all KEGG pathways for human since all datasets available in 
-  PADOG are for human.}
-   \item{organism}{A three letter string giving the name of the organism supported by the "KEGGRESTpathway" package.}
+  \item{gslist}{A list with the gene sets. (see also \code{padog} function.)}
   \item{gs.names}{A character vector giving additional information about each gene set. For instance when gene seta are pathways, the full name of the pathway would be a meaningful gene set name.}
   \item{Nmin}{The minimum size of gene sets to be included in the analysis for all methods.}
   \item{NI}{Number of iterations to determine the gene set score significance p-values in PADOG and GSA methods.}
-  \item{parallel}{Should paralell be used if multiple cores are available and the package parallel is available. If se to TRUE one dataset will be run on on multiple CPU at a time (Not available on Windows).}
+  \item{parallel}{Should paralell be used if multiple cores are available and the package parallel is available. If set to TRUE analyses on methods and datasets will be run on on multiple CPU at a time.}
   \item{ncr}{The number of CPU cores used when \code{use.parallel} set to TRUE. Default is to use all CPU cores detected.}
   \item{pkgs}{Character vector of packages that the \code{existingMethods} and \code{mymethods} depend on (\code{NULL} for "PADOG" and "GSA"). Consult the \code{.packages} argument in \code{foreach} function from \code{foreach} package.}
   \item{expVars}{Character vector of variables to export. Consult the \code{.export} argument in \code{foreach} function from \code{foreach} package.}
@@ -37,7 +40,8 @@ See cited documents for more details.
 
 
 \value{
- A data frame containing the : \code{Method} is the name of the geneset analysis method;
+ A data list of stats from comparing the methods on the bechmark. The \code{summary} component is a data frame containing the columns:
+ \code{Method} is the name of the geneset analysis method;
  \code{p geomean} geometric mean of nominal p-values for the target genesets (genesets expected to be relevant);
   \code{p med} median of nominal p-values for the target genesets;
   \code{ \% p<0.05} is the fraction of target genesets significant at 0.05 level (this is the sensitivity);
@@ -62,20 +66,20 @@ Adi L. Tarca, Gaurav Bhatti, Roberto Romero, A Comparison of Gene Set Analysis M
 
 \examples{
 
-#compare a new geneset analysis method with PADOG and GSA
+#compare a new geneset analysis method with established methods PADOG and GSA
 
 #define your new gene set analysis method that takes as input:
-#set- the name of dataset file from the PADOGsetspackage
+#set- the name of dataset provided by loadCompPADOGBenchmark function
 #mygslist - a list with the genesets
 #minsize- minimum number of genes in a geneset to be considered for analysis 
 
 randomF=function(set,mygslist,minsize){
 set.seed(1)
 #this loads the dataset in an ExpressionSet object called x
-data(list=set,package="KEGGdzPathwaysGEO")
+loadCompPADOGBenchmark(set)
 x=get(set)
 
-#Extract from the dataset the required info to be passed to padog
+#Extract from the dataset the required info to be passed to filteranot and enrichment
 exp=experimentData(x);
 dat.m=exprs(x)
 ano=pData(x)
@@ -83,7 +87,6 @@ dataset= exp@name
 design= notes(exp)$design
 annotation= paste(x@annotation,".db",sep="")
 targetGeneSets= notes(exp)$targetGeneSets
-
 
 #get rid of duplicates probesets per ENTREZ ID by keeping the probeset 
 #with smallest p-value (computed using limma) 
@@ -108,19 +111,21 @@ res$Dataset<-dataset;
 return(res[res$ID \%in\% targetGeneSets,])
 }
 
-#run the analysis on all 24 datasets and compare the new method "myRand" with 
-#PADOG and GSA (if installed) (chosen as reference since is listed first in the existingMethods)
-#if the package parallel is installed datasets are analyzed in parallel.
-#out=compPADOG(datasets=NULL,existingMethods=c("GSA","PADOG"),
- #mymethods=list(myRand=randomF),
- #gslist="KEGGRESTpathway",Nmin=3,NI=1000,plots=TRUE,verbose=FALSE)
+#prepare KEGG pathways for human as gene list 
+library(KEGGREST)
+res <- keggLink("pathway", "hsa")
+a=data.frame(path=gsub(paste("path:","hsa",sep=""),"",res),gns=gsub(paste("hsa",":",sep=""),"",names(res)))
+gslist=tapply(a$gns,a$path,function(x){as.character(x)})
+gs.names=keggList("pathway", "hsa")[paste("hsa",names(gslist),sep="")]
+names(gs.names)<-names(gslist)
 
-#compare myRand against PADOG on 4 datasets only
-#mysets=data(package="PADOGsets")$results[,"Item"]
+
+
+#compare myRand against PADOG on 3 datasets only
 mysets=c("GSE9348","GSE8671","GSE1297")
 out=compPADOG(datasets=mysets,existingMethods=c("PADOG"),
  mymethods=list(myRand=randomF),
- gslist="KEGGRESTpathway",Nmin=3,NI=20,plots=FALSE,verbose=FALSE)
+ gslist=gslist,Nmin=3,NI=100,plots=FALSE,verbose=FALSE)
 
 }
 

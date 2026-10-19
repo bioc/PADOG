@@ -12,6 +12,7 @@
 \usepackage[authoryear,round]{natbib}
 \usepackage{hyperref}
 \usepackage{url}
+\usepackage{graphicx}
 
 \parindent 0in
 
@@ -20,52 +21,47 @@
 \SweaveOpts{concordance=TRUE}
 
 \title{\bf Bioconductor's PADOG package}
-\author{Adi L. Tarca$^{1,2,3}$}
+\author{Adi L. Tarca$^{1,2,3}$ \and Zonghui Xu$^{4}$ \and Gaurav Bhatti$^{1}$}
+
 
 \maketitle
 
 $^1$Center for Molecular Medicine and Genetics, Wayne State University\\
 $^2$Department of Obstetrics and Gynecology, Wayne State University \\
 $^3$Department of Computer Science, Wayne State University\\
-
+$^4$Channing Division of Network Medicine, Brigham and Women's Hospital, Harvard Medical School\\
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Overview}
-
 This package implements the \emph{\textbf{P}athway \textbf{A}nalysis with \textbf{D}own-weighting of \textbf{O}verlapping \textbf{G}enes} (\textbf{PAD\-OG})
- algorithm described in \cite{TarcaPADOG:2012}. The method can be applied to analyze any type of gene sets yet in here
- it is illustarted using KEGG pathways.
+ algorithm described in \cite{TarcaPADOG:2012} and a pathway / gene set analysis benchmark \cite{TarcaCompPADOG:2013}. The PADOG method can be applied to analyze any type of gene sets yet in here
+ it is illustrated using KEGG pathways.
 The method computes a gene set score as the mean of absolute values of weighted moderated gene
  \emph{t}-scores. The gene weights are chosen to favor genes appearing in few pathways versus genes
   that appear in many pathways. The significance of pathway scores is evaluated using sample/array 
   labels permutation that preserve the gene-gene correlation structure.
-The package also contains a benchmark for gene set analysis in general and allows a new gene set 
-analysis method to be benchmarked against PADOG or other exsisting methods (e.g. GSA).
-The benchmark uses 24 different data sets, each involving a disease (e.g. Colorectal Cancer) for which there
-is a KEGG pathway with the same name. The only assumption we make (proven to hold in \cite{TarcaPADOG:2012}) 
-is that the KEGG's pathway with the same name as the disease under the study should be found significant 
-and/or ranked near the top by gene set analysis methods when analyzing a dataset that compares normal 
-with diseased samples.
+The package also contains a benchmark for gene set analysis in general and allows any new gene set 
+analysis method to be benchmarked against PADOG or other existing methods (e.g. GSA).
+The original benchmark used 42 different data sets, each involving a disease (e.g. Colorectal Cancer) for which there
+is a KEGG or Metacore pathway with the same name. The only assumption we make (proven to hold in \cite{TarcaPADOG:2012} and \cite{TarcaCompPADOG:2013}) 
+is that the KEGG's or Metacore's pathway with the same name as the disease under the study should be found significant 
+and/or ranked near the top by gene set analysis methods when analyzing a dataset that studies the disease phenotype in question (cases vs controls).
 
 \section{Pathway / gene set analysis with PADOG package}
-
 This document provides basic introduction on how to use the {\tt PADOG} package. For extended 
 description of the methods used by this package please consult \cite{TarcaPADOG:2012} and \cite{TarcaCompPADOG:2013}.\\ 
-
 We demonstrate the functionality of this package using a colorectal cancer dataset obtained using 
 Affymetrix GeneChip technology and available 
 through GEO (GSE9348) and incorporated in the {\tt KEGGdzPathwaysGEO} package. This experiment contains 12 normal samples and 70 colorectal cancer samples 
 and is described in \cite{pmid20143136}. 
-The RMA preprocessed data using the {\tt affy} package is the entry point for the {\tt padog} 
-function:
- 
+The RMA preprocessed data using the {\tt affy} package is the entry point for the {\tt padog} function:
 <<eval=TRUE, echo=TRUE,fig=TRUE,label=fig1>>=
 library(PADOG)
-set = "GSE9348"
-data(list = set, package = "KEGGdzPathwaysGEO")
+set = "GSE9348" # this set is from "KEGGdzPathwaysGEO" collection
 #write a function to extract required info into a list
 getdataaslist = function(x) {
-    x = get(x)
+    loadCompPADOGBenchmark(x)
+    x=get(x)
     exp = experimentData(x)
     dataset = exp@name
     disease = notes(exp)$disease
@@ -81,34 +77,42 @@ getdataaslist = function(x) {
 }
 dlist = getdataaslist(set)
 #run padog function on KEGG pathways
-#use NI=1000 for accurate results and run in parallel to speed up (see below)
-myr = padog(
-    esetm = dlist$dat.m,
+
+#prepare human KEGG pathways as gene list for enrichment analysis with PADOG
+library(KEGGREST)
+res <- keggLink("pathway", "hsa")
+a=data.frame(path=gsub(paste("path:","hsa",sep=""),"",res),
+             gns=gsub(paste("hsa",":",sep=""),"",names(res)))
+KEGGpathways=tapply(a$gns,a$path,function(x){as.character(x)})
+KEGGpathwaysNames=keggList("pathway", "hsa")[paste("hsa",names(KEGGpathways),sep="")]
+names(KEGGpathwaysNames)<-names(KEGGpathways)
+
+#run padog on this dataset
+myr = padog(esetm = dlist$dat.m,
     group = dlist$ano$Group,
     paired = dlist$design == "Paired",
     block = dlist$ano$Block,
     targetgs = dlist$targetGeneSets,
     annotation = dlist$annotation,
-    gslist = "KEGGRESTpathway",
-    organism = "hsa",
+    gslist = KEGGpathways,gs.names=KEGGpathwaysNames,
     verbose = FALSE,
     Nmin = 3,
-    NI = 50,
+    NI = 100,
     plots = TRUE,
     dseed = 1
 )
-
-myr[1:15,-c(4,5)]
+myr$Name = substr(gsub("- Homo sapiens (human)", "", myr$Name, fixed = TRUE),1,36)
+myr[1:20,-c(4,5)]
 @
 
-Note that for this colorectal cancer dataset it is reasonbale to expect that the KEGG's Colorectal cancer pathway 
+Note that for this colorectal cancer dataset it is reasonable to expect that the KEGG's Colorectal cancer pathway 
 will be found significant and/or ranked close to the top. PmeanAbsT corresponds to the p-value
-obtained without using gene weights and hence the result is worse (higher p-value) compared to Ppadog obtained by 
-using the gene weights that are inversly related to how often the genes apear accross all gene sets to be analyzed.
+obtained without using gene weights and hence the result is worse (higher p-value) compared to pPadog obtained by 
+using the gene weights that are inversely related to how often the genes appear accross all gene sets to be analyzed.
 The plot created when {\tt plots=TRUE} in the call to {\tt padog} shows how gene weighting 
-improves the gene set analysis for the traget pathway set via the {\tt targetgs} argument. Figure above shows 
+improves the gene set analysis for the target pathway set via the {\tt targetgs} argument. Figure above shows 
 the distribution of pathway/gene set scores (\emph{y} axis)
-for PADOG and ABSmT (which is PADOG without weights) after the first standardization (row randomization) and 
+for PADOG and ABSmT (which is PADOG without gene weights) after the first standardization (row randomization) and 
 after second standardization (between gene sets standardization). The \emph{x} axis 
 represents the number of iterations. Iteration 0 uses true class labels, all others used randomly permuted 
 labels. The target pathway (set via the {\tt targetgs} argument) in this dataset is the 
@@ -116,41 +120,18 @@ labels. The target pathway (set via the {\tt targetgs} argument) in this dataset
 is shown with a red bullet throughout all 4 panels, and a red horizontal line marks its level when obtained 
 with the true class labels ($ite=0$, x-axis). The box plots of scores obtained with the true class labels 
 are also highlighted in blue. With PADOG, after the second standardization, the target pathway scores 
-obtained from permutations are less frequently above the red line ($0/20$) (more extreme) than for ABSmT 
- ($5/20$). Over 1,000 iterations, $p_{PADOG}$ was estimated to be 0.018 while $p_{ABSmT}$ worse, i.e. 0.138.\\
+obtained from permutations are less frequently above the red line (more extreme) than for teh raw scores ABSmT.\\
 
-To run PADOG in parallel, you need to have package {\tt doParallel} installed, and set {\tt parallel = TRUE} in the
-call to {\tt padog}:
-<<eval=TRUE, echo=TRUE,fig=FALSE>>=
-#you can control the number of cores to use via argument 'ncr' 
-myr2 = padog(
-    esetm = dlist$dat.m,
-    group = dlist$ano$Group,
-    paired = dlist$design == "Paired",
-    block = dlist$ano$Block,
-    targetgs = dlist$targetGeneSets,
-    annotation = dlist$annotation,
-    gslist = "KEGGRESTpathway",
-    organism = "hsa",
-    verbose = FALSE,
-    Nmin = 3,
-    NI = 50,
-    plots = TRUE,
-    dseed = 1,
-    parallel = TRUE
-)
-# verify that the result is the same which is a built-in feature
-all.equal(myr, myr2)
-@
+To run PADOG in parallel, you need to have package {\tt doParallel} installed, and set {\tt parallel = TRUE} in the call to {\tt padog}:
+
 
 \section{Benchmark of gene set analysis methods}
 
-The entire collection of 24 datasets available in {\tt KEGGdzPathwaysGEO} package that can be used to benchmark PADOG 
-against existing approaches is given in Table \ref{tab:datasets}:
+The entire collection of 42 datasets is available from data packages {\tt KEGGdzPathwaysGEO} and {\tt KEGGandMetacoreDzPathwaysGEO}. These datasets can be used to benchmark PADOG against existing approaches. The subset of 24 datasets part of the KEGGdzPathwaysGEO collection is given in Table \ref{tab:datasets}:
 
 \begin{table}[h]
 \small
-\caption{\bf{The 24 datasets used in the benchmark of pathway analysis methods}}
+\caption{\bf{The 24 datasets part of the KEGGdzPathwaysGEO collection}}
 \noindent\makebox[\textwidth]{%
 \begin{tabularx}{1.2\textwidth}{rllllll}
   \hline
@@ -183,16 +164,15 @@ GSE3585&17045896&\cite{pmid17045896}& Dilated cardiomyopathy&hsa05414 &Heart\\
    \hline
 \end{tabularx}
 }
-
-\begin{flushleft} The 24 datasets used to compare the pathway analysis methods were obtained from GEO.
+\begin{flushleft} All datasets used to compare the pathway analysis methods were obtained from GEO.
 \end{flushleft}
 \label{tab:datasets}
 \end{table}
 
 To illustrate how to compare PADOG against a user defined gene set analysis method we create a function called 
-{\tt randomF} that assignes random uniform P-values to gene sets. The user defined function has to take in 3 arguments:
+{\tt randomF} that assigns random uniform P-values to gene sets. The user defined function has to take in 3 arguments:
 \begin{enumerate}
-\item {\tt set}: the name of a dataset available in from the KEGGdzPathwaysGEO package;
+\item {\tt set}: the name of a dataset available from {\tt KEGGdzPathwaysGEO} or {\tt KEGGandMetacoreDzPathwaysGEO};
 \item {\tt mygslist}: a list with elements being vectors of gene ids for a given geneset
 \item {\tt minsize}: minimum number of genes in a geneset to be considered for analysis
 \end{enumerate}
@@ -201,14 +181,11 @@ The output should be a dataframe with columns: ID, P, Rank, Dataset, Method for 
 in that dataset (targetGeneSets).  
 
 <<eval=TRUE, echo=TRUE,fig=TRUE>>=
-randFun = function(dseed, mname = "myRand") {
+randFun = function(mname = "myRand") {
     #a helper function to pass additional variables to your method
     getdataaslist = getdataaslist
     return(function(set, mygslist, minsize) {#your method function
-        set.seed(dseed)
-        #this loads the dataset 
-        data(list = set, package = "KEGGdzPathwaysGEO")
-        #extract the required info using the function defined earlier 
+        #load the dataset and extract the required info using the function getdataaslist 
         dlist = getdataaslist(set)
         #get rid of duplicates probesets per ENTREZ ID by keeping the probeset 
         #with smallest p-value (computed using limma) 
@@ -217,13 +194,12 @@ randFun = function(dseed, mname = "myRand") {
             annotation = dlist$annotation)
         #create an output dataframe for this toy method with random gene set p-values
         mygslistSize = unlist(lapply(mygslist, function(x) {
-            length(intersect(aT1$ENTREZID, x))
-        }))
+            length(intersect(aT1$ENTREZID, x))}))
         res = data.frame(ID = names(mygslist), P = runif(length(mygslist)),
             Size = mygslistSize, stringsAsFactors = FALSE)
-        res$FDR = p.adjust(res$P,"fdr")
         #drop genesets with less than minsize genes in the current dataset 
         res = res[res$Size >= minsize,]
+        res$FDR = p.adjust(res$P,"fdr")
         #compute ranks
         res$Rank = rank(res$P) / dim(res)[1]*100
         #needed to compare ranks between methods; must be the same as given 
@@ -231,39 +207,49 @@ randFun = function(dseed, mname = "myRand") {
         res$Method = mname 
         #needed because comparisons of ranks between methods is paired at dataset level
         res$Dataset = dlist$dataset
-        #output only result for the targetGeneSets 
-        #which are gene sets expected to be relevant in this dataset
+        #output only result for targetGeneSets (expected to be relevant)
         return(res[res$ID %in% dlist$targetGeneSets,])
         }
     )
 }
 
-randomF = randFun(1)
+randomF = randFun()
 
-#run the analysis on all 24 datasets and compare the new method "myRand" with 
-#PADOG and GSA (if installed) (chosen as reference since is listed first in the
-#existingMethods) 
-#if the package doParallel is installed datasets are analyzed in parallel.
-#out = compPADOG(datasets = NULL, existingMethods = c("GSA","PADOG"),
-#    mymethods = list(myRand = randomF), gslist = "KEGGRESTpathway",
-#    Nmin = 3, NI = 1000, plots = TRUE, verbose=FALSE, 
-#    parallel = TRUE, dseed = 1, pkgs = NULL)
-
-#compare myRand against PADOG on 3 datasets only
-#mysets = data(package = "KEGGdzPathwaysGEO")$results[,"Item"]
+#compare myRand method against PADOG on 3 datasets only
 mysets = c("GSE9348","GSE8671","GSE1297")
 out = compPADOG(datasets = mysets, existingMethods = c("PADOG"),
     mymethods = list(myRand = randomF), 
-    gslist = "KEGGRESTpathway", Nmin = 3, NI = 40, plots = TRUE, 
-    verbose=FALSE, parallel = TRUE, dseed = 1, pkgs = NULL)
-
+    gslist = KEGGpathways, Nmin = 3, NI = 50, plots = TRUE, 
+    verbose=FALSE, parallel = FALSE, dseed = 1, pkgs = NULL)
 print(out)
-
 @
+\\
+Details about the meaning of the columns in the out table are given in \cite{TarcaPADOG:2012}. The better the method, the smaller the p-values and ranks for the target pathways, since these are supposed to be 
+significant to their respective datasets. 
 
-Details about the meaning of the columns in the out table are given in \cite{TarcaPADOG:2012}. The better the
-method, the smaller the p-values and ranks for the target pathways, since these are supposted to be 
-significant to their respective datasets.  
+For a more meaningful benchmark one can compare the same three methods on all 24 datasets of the KEGGdzPathwaysGEO collection + the 10 of the 18 datasets from the KEGGandMetacoreDzPathwaysGEO collection that had a KEGG target pathway (34 datasets total).
+
+<<long-computation, eval=FALSE, echo=TRUE>>=
+ allsets=loadCompPADOGBenchmark(dataset = NULL, collection = "all",assign=FALSE)
+ metacoresets=c("GSE11906","GSE19420","GSE20164","GSE22780","GSE30153","GSE38666_epithelia","GSE38666_stroma","GSE42057")
+ keggsets=setdiff(allsets,metacoresets)
+ out = compPADOG(datasets = keggsets, collection="all", 
+                existingMethods = c("GSA","PADOG"),
+    mymethods = list(myRand = randomF), gslist = KEGGpathways,
+    Nmin = 3, NI = 1000, plots = TRUE, verbose=TRUE, 
+    parallel = TRUE, dseed = 1, pkgs = NULL)
+@
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=1\textwidth]{PADOG_GSA_Rand.pdf}
+\caption{Comparison of PADOG, GSA  and myRand enrichment methods on 34 datasets using 1,000 permutations per method.}
+\label{fig:KEGGdzPathwaysGEO}
+\end{figure}
+
+Note, in the original benchmark in \cite{TarcaCompPADOG:2013} 8 of the 18 datasets from the KEGGandMetacoreDzPathwaysGEO collection had a target pathway defined in the Metacore database instead of KEGG, and hence can not be considered herein since the Metacore pathway definitions are not publicly available.  
+In the benchmark above, the emerging trend is that PADOG returns smaller p-values and better rankings based on those p-values for pathways expected to be relevant in the specific datasets involved, relative to GSA and the random enrichment function (myRand).
+\section{Changes in version 1.6}
+The main change in this version is that loading data from the original KEGGandMetacoreDzPathwaysGEO and KEGGdzPathwaysGEO data packages through the function {\tt loadCompPADOGBenchmark()}.
 
 \bibliography{PADOG} 
 \end{document}

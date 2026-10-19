@@ -1,30 +1,22 @@
 Package: PADOG
-Version: 1.55.0
-Date: 2020-1-31
+Version: 1.55.1
+Date: 2026-10-19
 Title: Pathway Analysis with Down-weighting of Overlapping Genes
         (PADOG)
-Author: Adi Laurentiu Tarca <atarca@med.wayne.edu>; Zhonghui Xu <zhonghui.xu@gmail.com> 
-Depends: R (>= 3.0.0), KEGGdzPathwaysGEO,
-    methods,Biobase
-Suggests: doParallel, parallel
+Author: Adi Laurentiu Tarca <atarca@med.wayne.edu>; Zhonghui Xu <zhonghui.xu@gmail.com>; Gaurav Bhatti <gbhatti@med.wayne.edu> 
+Depends: R (>= 3.0.0), methods,Biobase
+Suggests: doParallel, KEGGdzPathwaysGEO, KEGGandMetacoreDzPathwaysGEO
 Maintainer: Adi L. Tarca <atarca@med.wayne.edu>
 Description: This package implements a general purpose gene set
         analysis method called PADOG that downplays the importance of
-        genes that apear often accross the sets of genes to be
+        genes that appear often accross the sets of genes to be
         analyzed. The package provides also a benchmark for gene set
-        analysis methods in terms of sensitivity and ranking using 24
-        public datasets from KEGGdzPathwaysGEO package.
+        analysis methods in terms of sensitivity and ranking using 42
+        datasets originally curated in KEGGdzPathwaysGEO and KEGGandMetacoreDzPathwaysGEO data packages.
 License: GPL (>= 2)
 URL:
-Collate: padog.R compPADOG.R filteranot.R
-Imports: limma,
-    AnnotationDbi,
-    GSA,
-    foreach,
-    doRNG,
-    hgu133plus2.db,
-    hgu133a.db,
-    KEGGREST,
-    nlme
+Collate: padog.R compPADOG.R filteranot.R loadCompPADOGBenchmark.R
+Imports: limma, AnnotationDbi, GSA, foreach, doRNG, hgu133plus2.db,
+    hgu133a.db, KEGGREST, nlme
 LazyLoad: yes
 biocViews: Microarray, OneChannel, TwoChannel
